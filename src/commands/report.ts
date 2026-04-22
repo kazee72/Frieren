@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   AttachmentBuilder,
+  ChannelType,
 } from "discord.js";
 import { getLogsInRange } from "../db/logs.js";
 
@@ -79,6 +80,7 @@ function formatReport(
 export async function execute(interaction: ChatInputCommandInteraction) {
   const days = interaction.options.getInteger("days") ?? 7;
   const userId = interaction.user.id;
+  const reportChannelId = process.env.REPORT_CHANNEL_ID;
 
   const now = new Date();
   const fromDate = new Date(now);
@@ -93,21 +95,115 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const logs = getLogsInRange({ userId, fromIso, toIso });
 
+  // If no report channel configured, fall back to ephemeral reply
+  if (!reportChannelId) {
+    const markdown = formatReport(logs, fromDate, toDate);
+    if (markdown.length <= 2000) {
+      await interaction.reply({
+        content: markdown,
+        ephemeral: true,
+      });
+    } else {
+      const attachment = new AttachmentBuilder(Buffer.from(markdown, "utf-8"), {
+        name: "report.md",
+      });
+      await interaction.reply({
+        content: "Report generated (attached):",
+        files: [attachment],
+        ephemeral: true,
+      });
+    }
+    return;
+  }
+
+  // Reply immediately to prevent timeout
+  await interaction.reply({
+    content: "Generating report…",
+    ephemeral: true,
+  });
+
+  // Check if there are any logs
+  if (logs.length === 0) {
+    await interaction.editReply("No entries in the selected range.");
+    return;
+  }
+
+  // Generate the report markdown
   const markdown = formatReport(logs, fromDate, toDate);
 
-  if (markdown.length <= 2000) {
-    await interaction.reply({
-      content: markdown,
-      ephemeral: true,
+  // Fetch the report channel
+  let reportChannel;
+  try {
+    reportChannel = await interaction.client.channels.fetch(reportChannelId);
+    if (!reportChannel || reportChannel.type !== ChannelType.GuildText) {
+      throw new Error("Report channel is not a text channel");
+    }
+  } catch (error) {
+    console.error("Failed to fetch report channel:", error);
+    await interaction.editReply(
+      "Error: Could not access report channel. Falling back to ephemeral reply."
+    );
+
+    // Fall back to ephemeral reply with the report
+    if (markdown.length <= 2000) {
+      await interaction.followUp({
+        content: markdown,
+        ephemeral: true,
+      });
+    } else {
+      const attachment = new AttachmentBuilder(Buffer.from(markdown, "utf-8"), {
+        name: "report.md",
+      });
+      await interaction.followUp({
+        content: "Report generated (attached):",
+        files: [attachment],
+        ephemeral: true,
+      });
+    }
+    return;
+  }
+
+  // Convert dates to Europe/Zurich timezone for thread name
+  const fromLocalStr = new Date(
+    fromDate.toLocaleString("en-US", { timeZone: "Europe/Zurich" })
+  )
+    .toISOString()
+    .split("T")[0];
+  const toLocalStr = new Date(
+    toDate.toLocaleString("en-US", { timeZone: "Europe/Zurich" })
+  )
+    .toISOString()
+    .split("T")[0];
+
+  const threadName = `Report ${fromLocalStr} → ${toLocalStr}`;
+
+  try {
+    // Create the thread
+    const thread = await reportChannel.threads.create({
+      name: threadName,
+      type: ChannelType.PublicThread,
+      autoArchiveDuration: 10080, // 7 days
     });
-  } else {
-    const attachment = new AttachmentBuilder(Buffer.from(markdown, "utf-8"), {
-      name: "report.md",
-    });
-    await interaction.reply({
-      content: "Report generated (attached):",
-      files: [attachment],
-      ephemeral: true,
-    });
+
+    // Post the report in the thread
+    if (markdown.length <= 2000) {
+      await thread.send(markdown);
+    } else {
+      const attachment = new AttachmentBuilder(Buffer.from(markdown, "utf-8"), {
+        name: "report.md",
+      });
+      await thread.send({
+        content: "Report generated:",
+        files: [attachment],
+      });
+    }
+
+    // Update the ephemeral reply with a link to the thread
+    await interaction.editReply(`Report ready: <#${thread.id}>`);
+  } catch (error) {
+    console.error("Failed to create thread or post report:", error);
+    await interaction.editReply(
+      "Error: Failed to create report thread. Check bot permissions."
+    );
   }
 }
