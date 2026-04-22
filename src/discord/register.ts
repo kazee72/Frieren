@@ -15,7 +15,7 @@ if (!DISCORD_TOKEN || !DISCORD_CLIENT_ID || !DISCORD_GUILD_ID) {
 
 const rest = new REST({ version: "10" }).setToken(DISCORD_TOKEN);
 
-const commandsData = commands.map((command) => command.toJSON());
+const commandsData = commands.map((command) => command.data.toJSON());
 
 console.log(`Registering ${commandsData.length} command(s) to guild ${DISCORD_GUILD_ID}...`);
 
