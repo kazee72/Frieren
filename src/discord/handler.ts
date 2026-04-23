@@ -1,7 +1,13 @@
 import { Interaction } from "discord.js";
 import { commands } from "../commands/index.js";
+import { handleButtonInteraction } from "./button-handler.js";
 
 export async function handleInteraction(interaction: Interaction) {
+  if (interaction.isButton()) {
+    await handleButtonInteraction(interaction);
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   const command = commands.find((cmd) => cmd.data.name === interaction.commandName);
