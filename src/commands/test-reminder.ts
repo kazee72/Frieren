@@ -6,7 +6,7 @@ import { sendReminderNow } from "../scheduler/daily-reminder.js";
 
 export const data = new SlashCommandBuilder()
   .setName("test-reminder")
-  .setDescription("Sends the daily reminder DM immediately (for testing)");
+  .setDescription("Sends the daily reminder to the channel immediately (for testing)");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {

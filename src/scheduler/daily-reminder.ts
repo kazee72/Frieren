@@ -1,52 +1,84 @@
 import cron from "node-cron";
-import type { Client, User } from "discord.js";
+import type { Client, TextChannel, Message } from "discord.js";
 
-const REMINDER_MESSAGE = "What'd you work on today? Reply to this DM and I'll log it.\n\n(Also: remember to git push!)";
+let lastReminderMessage: Message | null = null;
 
 export async function startDailyReminder(client: Client): Promise<void> {
   const reminderUserId = process.env.REMINDER_USER_ID;
+  const reminderChannelId = process.env.REMINDER_CHANNEL_ID;
 
   if (!reminderUserId) {
     console.log("REMINDER_USER_ID not set, skipping daily reminder setup.");
     return;
   }
 
-  let reminderUser: User;
-
-  try {
-    reminderUser = await client.users.fetch(reminderUserId);
-    console.log(`Daily reminder will be sent to ${reminderUser.tag} (${reminderUserId})`);
-  } catch (error) {
-    console.error(`Failed to fetch user ${reminderUserId} for daily reminder:`, error);
+  if (!reminderChannelId) {
+    console.log("REMINDER_CHANNEL_ID not set, skipping daily reminder setup.");
     return;
   }
 
+  // Send reminder at 15:30
   cron.schedule(
     "30 15 * * *",
     async () => {
       try {
-        await reminderUser.send(REMINDER_MESSAGE);
-        console.log(`Daily reminder sent to ${reminderUser.tag}`);
+        const channel = await client.channels.fetch(reminderChannelId);
+        if (channel?.isTextBased()) {
+          const message = await (channel as TextChannel).send(`<@${reminderUserId}> What'd you work on today?`);
+          lastReminderMessage = message;
+          console.log(`Daily reminder sent to channel ${reminderChannelId}`);
+        } else {
+          console.error("Reminder channel is not text-based");
+        }
       } catch (error) {
         console.error("Failed to send daily reminder:", error);
       }
     },
     {
-      scheduled: true,
+      timezone: "Europe/Zurich",
+    }
+  );
+
+  // Delete reminder at 09:00 the next morning
+  cron.schedule(
+    "0 9 * * *",
+    async () => {
+      try {
+        if (lastReminderMessage) {
+          await lastReminderMessage.delete();
+          console.log("Daily reminder message deleted");
+          lastReminderMessage = null;
+        }
+      } catch (error) {
+        console.error("Failed to delete daily reminder:", error);
+      }
+    },
+    {
       timezone: "Europe/Zurich",
     }
   );
 
   console.log("Daily reminder scheduled for 15:30 Europe/Zurich");
+  console.log("Daily reminder cleanup scheduled for 09:00 Europe/Zurich");
 }
 
 export async function sendReminderNow(client: Client): Promise<void> {
   const reminderUserId = process.env.REMINDER_USER_ID;
+  const reminderChannelId = process.env.REMINDER_CHANNEL_ID;
 
   if (!reminderUserId) {
     throw new Error("REMINDER_USER_ID not set");
   }
 
-  const reminderUser = await client.users.fetch(reminderUserId);
-  await reminderUser.send(REMINDER_MESSAGE);
+  if (!reminderChannelId) {
+    throw new Error("REMINDER_CHANNEL_ID not set");
+  }
+
+  const channel = await client.channels.fetch(reminderChannelId);
+  if (channel?.isTextBased()) {
+    const message = await (channel as TextChannel).send(`<@${reminderUserId}> What'd you work on today?`);
+    lastReminderMessage = message;
+  } else {
+    throw new Error("Reminder channel is not text-based");
+  }
 }

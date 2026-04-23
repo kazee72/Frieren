@@ -8,7 +8,7 @@ import { handleDMMessage } from "./discord/dm-handler.js";
 
 config();
 
-const { DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_GUILD_ID, REMINDER_USER_ID, REPORT_CHANNEL_ID } = process.env;
+const { DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_GUILD_ID, REMINDER_USER_ID, REMINDER_CHANNEL_ID, REPORT_CHANNEL_ID } = process.env;
 
 if (!DISCORD_TOKEN || !DISCORD_CLIENT_ID || !DISCORD_GUILD_ID) {
   console.error(
@@ -20,6 +20,12 @@ if (!DISCORD_TOKEN || !DISCORD_CLIENT_ID || !DISCORD_GUILD_ID) {
 if (!REMINDER_USER_ID) {
   console.warn(
     "Warning: REMINDER_USER_ID not set. Daily reminder scheduling will be skipped."
+  );
+}
+
+if (!REMINDER_CHANNEL_ID) {
+  console.warn(
+    "Warning: REMINDER_CHANNEL_ID not set. Daily reminder scheduling will be skipped."
   );
 }
 
