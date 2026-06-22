@@ -9,6 +9,7 @@ A Discord bot for Docker and host monitoring. It watches Docker container events
 - **`/status`** — lists all Docker containers with their current state, status string, and image, using status icons (🟢 running, 🔴 exited, etc.).
 - **`/uptime`** — shows host CPU load, memory usage, disk usage, and uptime, with visual load bars.
 - **`/ping`** — basic latency check.
+- **`/start`, `/stop`, `/restart`** — start, stop, or restart a container by name (owner-restricted). The container option autocompletes against existing containers.
 
 ## Setup
 
@@ -38,6 +39,7 @@ A Discord bot for Docker and host monitoring. It watches Docker container events
    | `DISCORD_CLIENT_ID` | Application/bot client ID |
    | `DISCORD_GUILD_ID` | Guild (server) ID where commands are registered |
    | `DISCORD_ALERT_CHANNEL_ID` | Channel where Docker event alerts are posted |
+   | `OWNER_DISCORD_ID` | Discord user ID permitted to run `/start`, `/stop`, `/restart` |
 
 3. Register slash commands (run once, or after changing command definitions):
 
@@ -65,6 +67,9 @@ A Discord bot for Docker and host monitoring. It watches Docker container events
 | `/ping` | Replies with bot latency. |
 | `/status` | Lists all Docker containers and their current state with status icons. |
 | `/uptime` | Shows host CPU load, memory, disk usage, and uptime. |
+| `/start` | Starts a container (owner-restricted, autocompletes container names). |
+| `/stop` | Stops a container (owner-restricted, autocompletes container names). |
+| `/restart` | Restarts a container (owner-restricted, autocompletes container names). |
 
 ## Project structure
 
@@ -80,8 +85,9 @@ src/
 │   ├── schema.ts    # Migrations (alert table)
 │   └── alerts.ts    # Alert insert/query helpers
 ├── discord/         # Discord infrastructure
-│   ├── handler.ts   # Interaction routing
+│   ├── handler.ts   # Interaction routing (chat + autocomplete)
 │   └── register.ts  # Standalone command registration script
+│   └── owner-gate.ts # Owner-only command gating helper
 ├── docker/          # Docker integration
 │   └── watcher.ts   # Event stream + embed alerts + container listing
 └── index.ts         # Bot entrypoint

@@ -175,3 +175,15 @@ export async function listContainers(): Promise<
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+export async function startContainer(name: string): Promise<void> {
+  await getDocker().getContainer(name).start();
+}
+
+export async function stopContainer(name: string): Promise<void> {
+  await getDocker().getContainer(name).stop();
+}
+
+export async function restartContainer(name: string): Promise<void> {
+  await getDocker().getContainer(name).restart();
+}
