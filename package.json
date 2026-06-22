@@ -1,6 +1,6 @@
 {
   "name": "frieren",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "engines": {
     "node": "20"
@@ -9,19 +9,19 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "register": "tsx src/discord/register.ts",
-    "seed-links": "tsx src/scripts/seed-links.ts"
+    "register": "tsx src/discord/register.ts"
   },
   "dependencies": {
     "better-sqlite3": "^12.9.0",
     "discord.js": "^14.17.3",
+    "dockerode": "^4.0.2",
     "dotenv": "^16.4.7",
-    "node-cron": "^4.2.1"
+    "systeminformation": "^5.23.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
+    "@types/dockerode": "^3.3.31",
     "@types/node": "^20.17.10",
-    "@types/node-cron": "^3.0.11",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }

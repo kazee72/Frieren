@@ -4,15 +4,12 @@ import {
   ChatInputCommandInteraction,
 } from "discord.js";
 import * as ping from "./ping.js";
-import * as log from "./log.js";
-import * as report from "./report.js";
-import * as testReminder from "./test-reminder.js";
-import * as clear from "./clear.js";
-import * as links from "./links.js";
+import * as status from "./status.js";
+import * as uptime from "./uptime.js";
 
 export interface Command {
   data: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
 }
 
-export const commands: Command[] = [ping, log, report, testReminder, clear, links];
+export const commands: Command[] = [ping, status, uptime];

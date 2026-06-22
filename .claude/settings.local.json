@@ -6,7 +6,16 @@
       "Bash(npm install:*)",
       "Bash(pnpm install:*)",
       "Bash(test:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: initial project scaffold\n\nSet up TypeScript Discord bot project with:\n- Node 20 LTS pinned in .nvmrc and package.json engines\n- TypeScript strict mode, ES2022 target, NodeNext modules\n- pnpm package manager with lock file\n- discord.js v14 and dotenv dependencies\n- Dev tooling: tsx, typescript, @types/node\n- Directory structure: src/{commands,db,llm,scheduler,discord}, data/, prompts/\n- /ping slash command with latency calculation\n- Guild-scoped command registration for instant updates\n- Environment variable validation on startup\n- Scripts: dev \\(tsx watch\\), build \\(tsc\\), start \\(node\\), register \\(command registration\\)\nEOF\n\\)\")",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm build:*)",
+      "Bash(git commit:*)",
+      "Bash(pnpm rebuild:*)",
+      "Bash(git push:*)",
+      "Bash(pnpm seed-links:*)",
+      "Bash(sqlite3:*)",
+      "Bash(node:*)"
     ]
   }
 }
